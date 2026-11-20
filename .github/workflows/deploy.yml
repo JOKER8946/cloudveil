@@ -36,3 +36,36 @@ jobs:
 
       - name: Pytest
         run: pytest --cov=app --cov-report=term-missing
+
+  deploy:
+    name: Build & Deploy
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # required for OIDC federated login
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Tailwind CSS
+        run: |
+          curl -sL https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.14/tailwindcss-linux-x64 -o tailwindcss
+          chmod +x tailwindcss
+          ./tailwindcss -i app/static/src/input.css -o app/static/css/app.css --minify
+
+      - name: Prune files that should not ship to App Service
+        run: rm -rf .git tests .github .venv tailwindcss
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          package: .
