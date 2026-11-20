@@ -60,8 +60,10 @@ def line_chart(data, title, xlabel, ylabel, outfile):
 
 
 def main() -> int:
-    csv_path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(
-        "ns3/results/cloudveil_results.csv"
+    csv_path = (
+        Path(sys.argv[1])
+        if len(sys.argv) > 1
+        else Path("ns3/results/cloudveil_results.csv")
     )
     if not csv_path.exists():
         print(f"no results at {csv_path}", file=sys.stderr)
