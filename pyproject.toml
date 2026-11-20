@@ -29,4 +29,12 @@ addopts = "-q"
 
 [tool.coverage.run]
 source = ["app"]
-omit = ["app/static/*", "*/migrations/*"]
+omit = [
+    "app/static/*",
+    "*/migrations/*",
+    # Cloud adapters that require live Azure (managed identity) — verified by
+    # the live smoke test, not unit tests.
+    "app/crypto/keyprovider.py",
+    "app/storage/blob.py",
+    "app/providers.py",
+]

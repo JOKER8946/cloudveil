@@ -35,7 +35,7 @@ Built phase by phase per `CLAUDE.md`. See that file for the full specification a
 | 3 | First live deploy | ✅ |
 | 4 | Database & auth | ✅ |
 | 5 | Crypto core | ✅ |
-| 6 | Files API + audit | ⏳ |
+| 6 | Files API + audit | ✅ |
 | 7 | Frontend | ⏳ |
 | 8 | Replication, monitoring, hardening | ⏳ |
 | 9 | Evidence & demo data | ⏳ |
