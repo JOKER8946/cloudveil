@@ -57,3 +57,27 @@ def test_admin_audit_and_stats(client, app, make_user):
     assert "actions_by_type" in s
     assert "storage_by_category" in s
     assert s["totals"]["users"] >= 1
+
+
+def test_benchmark_runs(client, app, make_user):
+    make_user("admin@example.com", role="admin")
+    csrf = login(client, "admin@example.com")
+    resp = client.post(
+        "/api/admin/benchmark",
+        json={"sizes": [1024, 4096]},
+        headers={"X-CSRF-Token": csrf},
+    )
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert "key_wrap_ms" in body
+    assert len(body["results"]) == 2
+    assert body["results"][0]["size_bytes"] == 1024
+
+
+def test_benchmark_requires_admin(client, make_user):
+    make_user("s@example.com", role="student")
+    csrf = login(client, "s@example.com")
+    resp = client.post(
+        "/api/admin/benchmark", json={"sizes": [1024]}, headers={"X-CSRF-Token": csrf}
+    )
+    assert resp.status_code == 403

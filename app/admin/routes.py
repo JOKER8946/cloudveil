@@ -157,3 +157,83 @@ def stats():
             },
         }
     )
+
+
+@bp.post("/benchmark")
+@require_role("admin")
+@csrf_protect
+def benchmark():
+    """Server-side timings for AES-GCM, key wrap/unwrap and blob I/O.
+
+    Uses synthetic random data written to temporary blobs that are deleted
+    immediately — never stored as user files.
+    """
+    import os
+    import time
+    import uuid
+
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+    from ..providers import get_key_provider, get_storage
+
+    data = request.get_json(silent=True) or {}
+    default_sizes = [100 * 1024, 1024 * 1024, 10 * 1024 * 1024]
+    sizes = data.get("sizes") or default_sizes
+    sizes = [int(s) for s in sizes if 0 < int(s) <= 50 * 1024 * 1024][:6]
+
+    kp = get_key_provider()
+    storage = get_storage()
+
+    dek = AESGCM.generate_key(bit_length=256)
+    t = time.perf_counter()
+    wrapped, kid = kp.wrap(dek)
+    wrap_ms = (time.perf_counter() - t) * 1000
+    t = time.perf_counter()
+    kp.unwrap(wrapped, kid)
+    unwrap_ms = (time.perf_counter() - t) * 1000
+
+    results = []
+    for size in sizes:
+        plaintext = os.urandom(size)
+        nonce = os.urandom(12)
+        aes = AESGCM(dek)
+        t = time.perf_counter()
+        ciphertext = aes.encrypt(nonce, plaintext, None)
+        enc_ms = (time.perf_counter() - t) * 1000
+        t = time.perf_counter()
+        aes.decrypt(nonce, ciphertext, None)
+        dec_ms = (time.perf_counter() - t) * 1000
+
+        blob_name = f"benchmark-{uuid.uuid4()}"
+        t = time.perf_counter()
+        storage.put(blob_name, ciphertext, file_id="benchmark")
+        put_ms = (time.perf_counter() - t) * 1000
+        t = time.perf_counter()
+        storage.get(blob_name)
+        get_ms = (time.perf_counter() - t) * 1000
+        storage.delete(blob_name)
+
+        results.append(
+            {
+                "size_bytes": size,
+                "aes_encrypt_ms": round(enc_ms, 3),
+                "aes_decrypt_ms": round(dec_ms, 3),
+                "blob_put_ms": round(put_ms, 2),
+                "blob_get_ms": round(get_ms, 2),
+            }
+        )
+    del dek
+
+    logger.record(
+        "ADMIN_ACTION",
+        "success",
+        user_id=get_current_user().id,
+        details={"benchmark_sizes": sizes},
+    )
+    return jsonify(
+        {
+            "key_wrap_ms": round(wrap_ms, 3),
+            "key_unwrap_ms": round(unwrap_ms, 3),
+            "results": results,
+        }
+    )

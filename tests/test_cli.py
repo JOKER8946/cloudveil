@@ -29,3 +29,22 @@ def test_rewrap_keys_rotates_and_keeps_file_readable(client, app):
     dl = client.get(f"/api/files/{file_id}/download")
     assert dl.status_code == 200
     assert dl.data == b"rotate me"
+
+
+def test_seed_demo_creates_users_and_docs(app):
+    from app.models import File, User
+
+    result = app.test_cli_runner().invoke(args=["seed-demo"])
+    assert result.exit_code == 0
+    with app.app_context():
+        assert User.query.filter_by(role="student").count() >= 3
+        assert User.query.filter_by(role="officer").count() >= 2
+        assert File.query.count() >= 3
+
+    # Idempotent: running again does not duplicate documents.
+    before = None
+    with app.app_context():
+        before = File.query.count()
+    app.test_cli_runner().invoke(args=["seed-demo"])
+    with app.app_context():
+        assert File.query.count() == before
