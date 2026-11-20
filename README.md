@@ -8,6 +8,34 @@ role/permission checks. Every action is audited.
 > MCA final-year project. **Cloud-only workflow** — the app runs only on Azure App Service. Code is
 > written here → pushed to GitHub → GitHub Actions tests, builds Tailwind, and deploys.
 
+## Live demo
+
+**https://cloudveil7k3.azurewebsites.net** · health: `/api/health`
+
+Seeded demo accounts (password **`Demo@12345`**):
+
+| Role | Email |
+|---|---|
+| Student | `asha.student@cloudveil.demo` |
+| Officer | `officer.admissions@cloudveil.demo` |
+| Admin | `demo.admin@cloudveil.demo` |
+
+A 5-minute walkthrough is in [`docs/demo-script.md`](docs/demo-script.md).
+(If idle, the first request can take ~20 s to warm up on the B1 tier.)
+
+## Documentation
+
+| Doc | What |
+|---|---|
+| [architecture.md](docs/architecture.md) | System + encrypt/decrypt flows (Mermaid) |
+| [security-design.md](docs/security-design.md) | Threat model & controls |
+| [api.md](docs/api.md) | REST API reference |
+| [testing-evidence.md](docs/testing-evidence.md) | 403, tamper, ciphertext-only, replication evidence |
+| [benchmarks.md](docs/benchmarks.md) | Live performance numbers |
+| [demo-script.md](docs/demo-script.md) | Viva walkthrough |
+| [ns3/README.md](ns3/README.md) | NS-3 network evaluation |
+| [infra/README.md](infra/README.md) | Azure provisioning scripts |
+
 ## Architecture (summary)
 
 ```
@@ -39,8 +67,8 @@ Built phase by phase per `CLAUDE.md`. See that file for the full specification a
 | 7 | Frontend | ✅ |
 | 8 | Replication, monitoring, hardening | ✅ |
 | 9 | Evidence & demo data | ✅ |
-| 10 | NS-3 evaluation | ⏳ |
-| 11 | Docs + teardown | ⏳ |
+| 10 | NS-3 evaluation | ✅ |
+| 11 | Docs + teardown | ✅ |
 
 ## Local developer tooling
 
