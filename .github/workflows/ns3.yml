@@ -17,6 +17,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Use Python 3.12 (ns-3's ./ns3 wrapper is incompatible with 3.14)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Install build dependencies
         run: |
           sudo apt-get update
