@@ -1,0 +1,40 @@
+# Secrets — never commit
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+instance/
+
+# Build artifacts
+app/static/css/app.css
+node_modules/
+
+# Tailwind standalone CLI binary
+tailwindcss
+tailwindcss.exe
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Azure / local tooling
+*.pem.local
+.azure/
+
+# NS-3 build output
+ns3/results/*.pcap
