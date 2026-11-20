@@ -37,7 +37,7 @@ fi
 echo "Pushing application settings to ${WEBAPP} (secrets not displayed)..."
 az webapp config appsettings set -g "${RG}" -n "${WEBAPP}" --only-show-errors -o none --settings \
   FLASK_CONFIG="prod" \
-  FLASK_APP="wsgi:app" \
+  FLASK_APP="app:create_app" \
   SCM_DO_BUILD_DURING_DEPLOYMENT="true" \
   RUN_SEED="false" \
   KEYVAULT_URL="${KEYVAULT_URL}" \

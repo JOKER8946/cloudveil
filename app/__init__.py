@@ -28,15 +28,16 @@ def create_app(config_name: str | None = None) -> Flask:
     _register_blueprints(app)
     _register_cli(app)
     _register_security_headers(app)
-    _configure_telemetry(app)
 
     return app
 
 
-def _configure_telemetry(app: Flask) -> None:
-    """Wire Azure Monitor / Application Insights if configured (prod only).
+def configure_telemetry(app: Flask) -> None:
+    """Wire Azure Monitor / Application Insights if configured.
 
-    Guarded so unit tests and unconfigured environments never touch the SDK.
+    Called ONLY from the gunicorn entry point (wsgi.py), never from the app
+    factory — configuring OpenTelemetry during a ``flask`` CLI run (migrations,
+    seeding) breaks Flask's app loading. Guarded and never fatal.
     """
     conn = app.config.get("APPLICATIONINSIGHTS_CONNECTION_STRING")
     if not conn or app.config.get("TESTING"):

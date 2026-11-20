@@ -24,7 +24,7 @@ $mysqlDb       = if ($Cfg['MYSQL_DATABASE']) { $Cfg['MYSQL_DATABASE'] } else { '
 Write-Host "Pushing application settings to $webapp (secrets not displayed)..."
 az webapp config appsettings set -g $rg -n $webapp --only-show-errors -o none --settings `
     FLASK_CONFIG=prod `
-    FLASK_APP=wsgi:app `
+    FLASK_APP=app:create_app `
     SCM_DO_BUILD_DURING_DEPLOYMENT=true `
     RUN_SEED=false `
     KEYVAULT_URL=$($Cfg['KEYVAULT_URL']) `
