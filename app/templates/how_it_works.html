@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}How it works · CloudVeil{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl space-y-6">
+  <h1 class="text-2xl font-bold text-veil-900">How CloudVeil protects your documents</h1>
+  <p class="text-slate-600">
+    Every file is encrypted with its own unique key before it ever leaves the server. Only
+    ciphertext is stored; the master key never leaves Azure Key Vault.
+  </p>
+
+  <ol class="space-y-4">
+    <li class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="font-semibold text-veil-700">1 · Encrypt</h2>
+      <p class="text-sm text-slate-600">A fresh 256-bit AES-GCM data key (DEK) and nonce are generated per file.
+        The file is encrypted and bound to its owner with authenticated additional data (AAD).</p>
+    </li>
+    <li class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="font-semibold text-veil-700">2 · Wrap the key</h2>
+      <p class="text-sm text-slate-600">The DEK is wrapped (RSA-OAEP-256) by the master key (KEK) in Azure Key Vault.
+        Only the <em>wrapped</em> key is stored in the database — never the plaintext key.</p>
+    </li>
+    <li class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="font-semibold text-veil-700">3 · Store</h2>
+      <p class="text-sm text-slate-600">The ciphertext goes to a private Azure Blob container as
+        <code>files/&lt;random-uuid&gt;.bin</code> — no original filename, no readable content.</p>
+    </li>
+    <li class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="font-semibold text-veil-700">4 · Replicate</h2>
+      <p class="text-sm text-slate-600">Object replication copies the ciphertext to a second Azure region for durability —
+        still only ciphertext.</p>
+    </li>
+    <li class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="font-semibold text-veil-700">5 · Authorize &amp; decrypt</h2>
+      <p class="text-sm text-slate-600">On download, CloudVeil checks authentication and permissions first. Only then is the
+        DEK unwrapped in Key Vault and the file decrypted and integrity-checked (SHA-256). Tampering is detected and rejected.</p>
+    </li>
+    <li class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="font-semibold text-veil-700">6 · Audit</h2>
+      <p class="text-sm text-slate-600">Every login, upload, download, share and denial is written to an append-only audit log.</p>
+    </li>
+  </ol>
+
+  <p class="text-xs text-slate-400">
+    Note: decryption is performed server-side, so CloudVeil provides strong encryption at rest with
+    controlled decryption — not end-to-end encryption.
+  </p>
+  <a href="/" class="inline-block rounded-lg bg-veil-600 px-4 py-2 text-sm font-medium text-white hover:bg-veil-700">Back to sign in</a>
+</div>
+{% endblock %}

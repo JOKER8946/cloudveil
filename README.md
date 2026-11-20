@@ -36,7 +36,7 @@ Built phase by phase per `CLAUDE.md`. See that file for the full specification a
 | 4 | Database & auth | ✅ |
 | 5 | Crypto core | ✅ |
 | 6 | Files API + audit | ✅ |
-| 7 | Frontend | ⏳ |
+| 7 | Frontend | ✅ |
 | 8 | Replication, monitoring, hardening | ⏳ |
 | 9 | Evidence & demo data | ⏳ |
 | 10 | NS-3 evaluation | ⏳ |

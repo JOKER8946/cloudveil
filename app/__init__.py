@@ -44,12 +44,14 @@ def _register_blueprints(app: Flask) -> None:
     from .admin.routes import bp as admin_bp
     from .auth.routes import bp as auth_bp
     from .files.routes import bp as files_bp
+    from .frontend.routes import bp as frontend_bp
     from .health.routes import bp as health_bp
 
     app.register_blueprint(health_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(files_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(frontend_bp)
 
 
 def _register_cli(app: Flask) -> None:
