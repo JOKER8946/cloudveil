@@ -4,8 +4,9 @@
 #   upload a file -> overwrite its ciphertext blob directly via az CLI ->
 #   download via the API and confirm HTTP 409 + an INTEGRITY_FAIL audit row.
 set -euo pipefail
-export MSYS_NO_PATHCONV=1
-export MSYS2_ARG_CONV_EXCL='*'
+# NOTE: do NOT set MSYS_NO_PATHCONV here — it stops Git Bash from converting
+# curl's /tmp cookie-jar paths to Windows paths, so curl can't write them. The
+# az calls below use only short blob names, not leading-slash resource IDs.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"

@@ -38,7 +38,7 @@ Built phase by phase per `CLAUDE.md`. See that file for the full specification a
 | 6 | Files API + audit | ✅ |
 | 7 | Frontend | ✅ |
 | 8 | Replication, monitoring, hardening | ✅ |
-| 9 | Evidence & demo data | ⏳ |
+| 9 | Evidence & demo data | ✅ |
 | 10 | NS-3 evaluation | ⏳ |
 | 11 | Docs + teardown | ⏳ |
 
