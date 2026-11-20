@@ -28,8 +28,25 @@ def create_app(config_name: str | None = None) -> Flask:
     _register_blueprints(app)
     _register_cli(app)
     _register_security_headers(app)
+    _configure_telemetry(app)
 
     return app
+
+
+def _configure_telemetry(app: Flask) -> None:
+    """Wire Azure Monitor / Application Insights if configured (prod only).
+
+    Guarded so unit tests and unconfigured environments never touch the SDK.
+    """
+    conn = app.config.get("APPLICATIONINSIGHTS_CONNECTION_STRING")
+    if not conn or app.config.get("TESTING"):
+        return
+    try:
+        from azure.monitor.opentelemetry import configure_azure_monitor
+
+        configure_azure_monitor(connection_string=conn)
+    except Exception:  # telemetry must never break the app
+        app.logger.warning("Azure Monitor telemetry not configured", exc_info=False)
 
 
 def _init_extensions(app: Flask) -> None:

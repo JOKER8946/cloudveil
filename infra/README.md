@@ -23,6 +23,8 @@ versions are the reference implementation.
 | `roles.sh` | Managed identity → Key Vault Crypto User + Storage Blob Data Contributor; signed-in user → Key Vault Crypto Officer + Storage Blob Data Contributor |
 | `github_oidc.sh` | Entra app + federated credential (repo `main`) + Contributor on RG; GitHub secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` |
 | `app_settings.sh` | App Service application settings (non-secret names + DB password, generated `JWT_SECRET`, App Insights connection string) |
+| `replication.sh` | Object Replication of `encrypted-files` primary → secondary region (ask first) |
+| `diagnostics.sh` | Key Vault `AuditEvent` + Storage blob logs → Log Analytics |
 | `teardown.sh` | Deletes the resource group (asks to confirm) |
 
 ## Cost note (Azure for Students)
