@@ -22,12 +22,14 @@ set +a
 RG="${AZURE_RESOURCE_GROUP}"
 KV="kv-${NAME_PREFIX}"
 SA_PRIMARY="${NAME_PREFIX}pri"
+SA_SECONDARY="${NAME_PREFIX}sec"
 WEBAPP="${NAME_PREFIX}"
 
 az account set --subscription "${AZURE_SUBSCRIPTION_ID}"
 
 KV_ID="$(az keyvault show -n "${KV}" -g "${RG}" --query id -o tsv)"
 SA_ID="$(az storage account show -n "${SA_PRIMARY}" -g "${RG}" --query id -o tsv)"
+SA_SEC_ID="$(az storage account show -n "${SA_SECONDARY}" -g "${RG}" --query id -o tsv)"
 MI_PRINCIPAL="$(az webapp identity show -g "${RG}" -n "${WEBAPP}" --query principalId -o tsv)"
 USER_OID="$(az ad signed-in-user show --query id -o tsv)"
 
@@ -45,5 +47,7 @@ assign "${MI_PRINCIPAL}" ServicePrincipal "Storage Blob Data Contributor"  "${SA
 echo "=== Signed-in user (${USER_OID}) ==="
 assign "${USER_OID}" User "Key Vault Crypto Officer"         "${KV_ID}"
 assign "${USER_OID}" User "Storage Blob Data Contributor"    "${SA_ID}"
+# Read access on the secondary account to verify cross-region replication.
+assign "${USER_OID}" User "Storage Blob Data Reader"         "${SA_SEC_ID}"
 
 echo "Done. (RBAC changes can take a minute or two to propagate.)"

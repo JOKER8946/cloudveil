@@ -22,20 +22,31 @@ DEST="${NAME_PREFIX}sec"
 CONTAINER="${STORAGE_CONTAINER:-encrypted-files}"
 az account set --subscription "${AZURE_SUBSCRIPTION_ID}"
 
-if az storage account or-policy list -g "${RG}" -n "${DEST}" --query "[?sourceAccount=='${SRC}']" -o tsv 2>/dev/null | grep -q .; then
-  echo "Object replication policy already exists (${SRC} -> ${DEST})."
+# Final state = the SOURCE account has the policy (both sides are then linked).
+# sourceAccount/destinationAccount are full resource IDs, so match by substring.
+if az storage account or-policy list -g "${RG}" -n "${SRC}" --query "[?contains(destinationAccount, '${DEST}')]" -o tsv 2>/dev/null | grep -q .; then
+  echo "Object replication already configured (${SRC} -> ${DEST})."
   exit 0
 fi
 
-echo "Creating object replication policy on destination ${DEST}..."
-POLICY_JSON="$(az storage account or-policy create -g "${RG}" -n "${DEST}" \
-  --source-account "${SRC}" --destination-account "${DEST}" \
-  --source-container "${CONTAINER}" --destination-container "${CONTAINER}" -o json)"
+# Reuse the destination policy if it already exists, else create it.
+POLICY_JSON="$(az storage account or-policy list -g "${RG}" -n "${DEST}" \
+  --query "[?contains(sourceAccount, '${SRC}')] | [0]" -o json 2>/dev/null || echo null)"
+if [ "${POLICY_JSON}" = "null" ] || [ -z "${POLICY_JSON}" ]; then
+  echo "Creating object replication policy on destination ${DEST}..."
+  POLICY_JSON="$(az storage account or-policy create -g "${RG}" -n "${DEST}" \
+    --source-account "${SRC}" --destination-account "${DEST}" \
+    --source-container "${CONTAINER}" --destination-container "${CONTAINER}" -o json)"
+fi
 
 echo "Applying the same policy to source ${SRC}..."
-echo "${POLICY_JSON}" > "${SCRIPT_DIR}/.orpolicy.json"
-az storage account or-policy create -g "${RG}" -n "${SRC}" \
-  --policy "@${SCRIPT_DIR}/.orpolicy.json" -o none
+POLICY_FILE="${SCRIPT_DIR}/.orpolicy.json"
+echo "${POLICY_JSON}" > "${POLICY_FILE}"
+# az is a Windows process under Git Bash; give it a path it can open.
+if command -v cygpath >/dev/null 2>&1; then
+  POLICY_FILE="$(cygpath -w "${POLICY_FILE}")"
+fi
+az storage account or-policy create -g "${RG}" -n "${SRC}" --policy "@${POLICY_FILE}" -o none
 rm -f "${SCRIPT_DIR}/.orpolicy.json"
 
 echo "Object replication enabled: ${SRC}/${CONTAINER} -> ${DEST}/${CONTAINER}"

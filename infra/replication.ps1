@@ -11,7 +11,7 @@ $src = $Names.SA_PRIMARY
 $dest = $Names.SA_SECONDARY
 $container = $Names.CONTAINER
 
-$existing = az storage account or-policy list -g $rg -n $dest --query "[?sourceAccount=='$src']" -o tsv 2>$null
+$existing = az storage account or-policy list -g $rg -n $src --query "[?contains(destinationAccount, '$dest')]" -o tsv 2>$null
 if ($existing) { Write-Host "Object replication already exists ($src -> $dest)."; return }
 
 Write-Host "Creating object replication policy on destination $dest..."
