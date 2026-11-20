@@ -7,6 +7,7 @@ selected by ``create_app(config_name)`` in :mod:`app`.
 from __future__ import annotations
 
 import os
+from urllib.parse import quote_plus
 
 
 def _bool(name: str, default: bool = False) -> bool:
@@ -31,9 +32,16 @@ def _mysql_uri() -> str:
     ssl_ca = os.environ.get("MYSQL_SSL_CA", "")
     if not (host and user and password):
         return ""
-    uri = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}?charset=utf8mb4"
+    # URL-encode credentials: the password may contain characters such as '@'
+    # or ':' that would otherwise break URL parsing.
+    user_q = quote_plus(user)
+    password_q = quote_plus(password)
+    uri = (
+        f"mysql+pymysql://{user_q}:{password_q}@{host}:{port}/{database}"
+        "?charset=utf8mb4"
+    )
     if ssl_ca:
-        uri += f"&ssl_ca={ssl_ca}"
+        uri += f"&ssl_ca={quote_plus(ssl_ca)}"
     return uri
 
 
