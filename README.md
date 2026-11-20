@@ -32,8 +32,8 @@ Built phase by phase per `CLAUDE.md`. See that file for the full specification a
 |---|---|---|
 | 1 | Scaffold + CI skeleton | ✅ |
 | 2 | Provision Azure | ✅ |
-| 3 | First live deploy | ⏳ |
-| 4 | Database & auth | ⏳ |
+| 3 | First live deploy | ✅ |
+| 4 | Database & auth | ✅ |
 | 5 | Crypto core | ⏳ |
 | 6 | Files API + audit | ⏳ |
 | 7 | Frontend | ⏳ |

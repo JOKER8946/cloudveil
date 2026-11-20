@@ -9,6 +9,8 @@ from __future__ import annotations
 import os
 from urllib.parse import quote_plus
 
+from sqlalchemy.pool import StaticPool
+
 
 def _bool(name: str, default: bool = False) -> bool:
     """Read a boolean-ish environment variable."""
@@ -93,6 +95,12 @@ class TestConfig(BaseConfig):
     DEBUG = False
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    # Share a single in-memory connection across contexts/threads so the schema
+    # created once in a fixture is visible to every request.
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "connect_args": {"check_same_thread": False},
+        "poolclass": StaticPool,
+    }
     SESSION_COOKIE_SECURE = False  # tests use HTTP
     JWT_SECRET = "test-secret"
     SECRET_KEY = "test-secret"
