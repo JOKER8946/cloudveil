@@ -1,0 +1,56 @@
+name: NS-3 Evaluation
+
+# Research simulation — built and run on demand (not part of app CI/CD).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ns3:
+    name: Build ns-3 + run sweeps
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      NS3_VER: "3.42"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ cmake ninja-build python3 python3-pip wget
+
+      - name: Download ns-3 ${{ env.NS3_VER }}
+        run: |
+          wget -q "https://www.nsnam.org/releases/ns-allinone-${NS3_VER}.tar.bz2"
+          tar xjf "ns-allinone-${NS3_VER}.tar.bz2"
+
+      - name: Add CloudVeil scenario
+        run: cp ns3/scenarios/cloudveil_sim.cc "ns-allinone-${NS3_VER}/ns-${NS3_VER}/scratch/"
+
+      - name: Configure & build (optimized, minimal modules)
+        working-directory: ns-allinone-${{ env.NS3_VER }}/ns-${{ env.NS3_VER }}
+        run: |
+          ./ns3 configure -d optimized \
+            --enable-modules core,network,internet,point-to-point,applications,flow-monitor
+          ./ns3 build
+
+      - name: Run parameter sweeps
+        run: |
+          NS3_DIR="$PWD/ns-allinone-${NS3_VER}/ns-${NS3_VER}" \
+            OUT="$PWD/ns3/results/cloudveil_results.csv" \
+            bash ns3/run_all.sh
+
+      - name: Plot results
+        run: |
+          pip install matplotlib
+          python ns3/plot_results.py ns3/results/cloudveil_results.csv
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ns3-results
+          path: ns3/results/
+          if-no-files-found: error
