@@ -25,7 +25,17 @@ set +a
 : "${GITHUB_REPO:?missing in .env, e.g. user/cloudveil}"
 RG="${AZURE_RESOURCE_GROUP}"
 APP_NAME="cloudveil-github-oidc"
-SUBJECT="repo:${GITHUB_REPO}:ref:refs/heads/main"
+
+# GitHub may issue OIDC tokens with an "immutable" subject that embeds numeric
+# owner/repo IDs (repo:owner@<id>/repo@<id>:...). Derive the exact subject
+# prefix from GitHub so the federated credential matches whatever it presents,
+# falling back to the classic format if the API doesn't expose a prefix.
+SUB_PREFIX="$(gh api "repos/${GITHUB_REPO}/actions/oidc/customization/sub" --jq '.sub_claim_prefix' 2>/dev/null || true)"
+if [ -n "${SUB_PREFIX}" ] && [ "${SUB_PREFIX}" != "null" ]; then
+  SUBJECT="${SUB_PREFIX}:ref:refs/heads/main"
+else
+  SUBJECT="repo:${GITHUB_REPO}:ref:refs/heads/main"
+fi
 
 az account set --subscription "${AZURE_SUBSCRIPTION_ID}"
 TENANT_ID="$(az account show --query tenantId -o tsv)"
@@ -47,8 +57,14 @@ fi
 SP_OID="$(az ad sp show --id "${APP_ID}" --query id -o tsv)"
 
 echo "=== Federated credential for ${SUBJECT} ==="
-if ! az ad app federated-credential list --id "${APP_ID}" \
+if az ad app federated-credential list --id "${APP_ID}" \
       --query "[?subject=='${SUBJECT}']" -o tsv | grep -q .; then
+  echo "exists"
+else
+  # Remove any stale 'github-main' credential (e.g. an old subject) so the name
+  # is free, then create one with the correct subject.
+  az ad app federated-credential delete --id "${APP_ID}" \
+    --federated-credential-id github-main -o none 2>/dev/null || true
   az ad app federated-credential create --id "${APP_ID}" --parameters "{
     \"name\": \"github-main\",
     \"issuer\": \"https://token.actions.githubusercontent.com\",
@@ -56,8 +72,6 @@ if ! az ad app federated-credential list --id "${APP_ID}" \
     \"audiences\": [\"api://AzureADTokenExchange\"]
   }" -o none
   echo "created"
-else
-  echo "exists"
 fi
 
 echo "=== Contributor on resource group ${RG} ==="
